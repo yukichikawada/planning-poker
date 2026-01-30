@@ -1,0 +1,48 @@
+import { WebSocketServer, WebSocket } from 'ws';
+import { nanoid } from 'nanoid';
+import { RoomManager } from './room-manager';
+import type { ClientMessage } from '../lib/types';
+
+const PORT = 3001;
+const roomManager = new RoomManager();
+
+const wss = new WebSocketServer({ port: PORT });
+
+console.log(`WebSocket server running on ws://localhost:${PORT}`);
+
+wss.on('connection', (ws: WebSocket, req) => {
+  const url = new URL(req.url || '', `http://localhost:${PORT}`);
+  const roomId = url.searchParams.get('roomId');
+
+  if (!roomId) {
+    ws.send(JSON.stringify({ type: 'error', message: 'Room ID required' }));
+    ws.close();
+    return;
+  }
+
+  const userId = nanoid(10);
+  let hasJoined = false;
+
+  ws.on('message', (data) => {
+    try {
+      const message: ClientMessage = JSON.parse(data.toString());
+
+      if (message.type === 'join' && !hasJoined) {
+        roomManager.joinRoom(roomId, ws, userId, message.name);
+        hasJoined = true;
+      } else if (hasJoined) {
+        roomManager.handleMessage(ws, message);
+      }
+    } catch (err) {
+      console.error('Failed to parse message:', err);
+    }
+  });
+
+  ws.on('close', () => {
+    roomManager.handleDisconnect(ws);
+  });
+
+  ws.on('error', (err) => {
+    console.error('WebSocket error:', err);
+  });
+});
