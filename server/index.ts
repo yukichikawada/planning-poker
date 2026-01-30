@@ -1,5 +1,4 @@
 import { WebSocketServer, WebSocket } from 'ws';
-import { nanoid } from 'nanoid';
 import { RoomManager } from './room-manager';
 import type { ClientMessage } from '../lib/types';
 
@@ -20,7 +19,6 @@ wss.on('connection', (ws: WebSocket, req) => {
     return;
   }
 
-  const userId = nanoid(10);
   let hasJoined = false;
 
   ws.on('message', (data) => {
@@ -28,7 +26,7 @@ wss.on('connection', (ws: WebSocket, req) => {
       const message: ClientMessage = JSON.parse(data.toString());
 
       if (message.type === 'join' && !hasJoined) {
-        roomManager.joinRoom(roomId, ws, userId, message.name);
+        roomManager.joinRoom(roomId, ws, message.userId, message.name);
         hasJoined = true;
       } else if (hasJoined) {
         roomManager.handleMessage(ws, message);

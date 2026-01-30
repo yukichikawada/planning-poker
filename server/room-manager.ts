@@ -27,9 +27,36 @@ export class RoomManager {
   }
 
   joinRoom(roomId: string, ws: WebSocket, userId: string, name: string): void {
+    // Prevent duplicate joins from the same connection
+    if (this.connections.has(ws)) {
+      return;
+    }
+
     let room = this.rooms.get(roomId);
     if (!room) {
       room = this.createRoom(roomId);
+    }
+
+    // Check if user is already in the room (reconnection)
+    const existingUser = room.users.find((u) => u.id === userId);
+    if (existingUser) {
+      // Remove old connection mapping for this user (but don't close the WebSocket - let it close naturally)
+      this.connections.forEach((conn, oldWs) => {
+        if (conn.roomId === roomId && conn.userId === userId) {
+          this.connections.delete(oldWs);
+        }
+      });
+      // Update connection mapping
+      this.connections.set(ws, { roomId, userId });
+      // Update name if changed
+      existingUser.name = name;
+      // Send current room state
+      this.send(ws, {
+        type: 'room-state',
+        room: this.getSanitizedRoom(room),
+        userId,
+      });
+      return;
     }
 
     const isHost = room.users.length === 0;
@@ -115,6 +142,21 @@ export class RoomManager {
     const conn = this.connections.get(ws);
     if (!conn) return;
 
+    // Remove this connection from the map first
+    this.connections.delete(ws);
+
+    // Check if user has another active connection (reconnection scenario)
+    let hasOtherConnection = false;
+    this.connections.forEach((otherConn) => {
+      if (otherConn.roomId === conn.roomId && otherConn.userId === conn.userId) {
+        hasOtherConnection = true;
+      }
+    });
+
+    if (hasOtherConnection) {
+      return;
+    }
+
     const room = this.rooms.get(conn.roomId);
     if (room) {
       room.users = room.users.filter((u) => u.id !== conn.userId);
@@ -131,8 +173,6 @@ export class RoomManager {
         this.broadcastToRoom(conn.roomId, { type: 'user-left', userId: conn.userId });
       }
     }
-
-    this.connections.delete(ws);
   }
 
   handleMessage(ws: WebSocket, message: ClientMessage): void {

@@ -3,6 +3,18 @@ import { WS_URL } from './constants';
 
 type MessageHandler = (message: ServerMessage) => void;
 
+const USER_ID_KEY = 'planning-poker-user-id';
+
+function getOrCreateUserId(): string {
+  if (typeof window === 'undefined') return '';
+  let userId = localStorage.getItem(USER_ID_KEY);
+  if (!userId) {
+    userId = crypto.randomUUID();
+    localStorage.setItem(USER_ID_KEY, userId);
+  }
+  return userId;
+}
+
 export class WebSocketClient {
   private ws: WebSocket | null = null;
   private messageHandler: MessageHandler | null = null;
@@ -10,11 +22,14 @@ export class WebSocketClient {
   private maxReconnectAttempts = 5;
   private roomId: string;
   private userName: string | null = null;
+  private userId: string;
   private pendingMessages: ClientMessage[] = [];
   private isConnected = false;
+  private hasJoined = false;
 
   constructor(roomId: string) {
     this.roomId = roomId;
+    this.userId = getOrCreateUserId();
   }
 
   connect(onMessage: MessageHandler): void {
@@ -31,9 +46,10 @@ export class WebSocketClient {
       }
       this.pendingMessages = [];
 
-      // If we have a username, send join
-      if (this.userName) {
-        this.send({ type: 'join', name: this.userName });
+      // If we have a username and haven't joined yet, send join
+      if (this.userName && !this.hasJoined) {
+        this.hasJoined = true;
+        this.send({ type: 'join', name: this.userName, userId: this.userId });
       }
     };
 
@@ -60,9 +76,11 @@ export class WebSocketClient {
   }
 
   join(name: string): void {
+    if (this.hasJoined) return;
     this.userName = name;
     if (this.isConnected) {
-      this.send({ type: 'join', name });
+      this.hasJoined = true;
+      this.send({ type: 'join', name, userId: this.userId });
     }
     // If not connected yet, onopen will send the join
   }

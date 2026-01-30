@@ -16,7 +16,7 @@ export interface Room {
 }
 
 export type ClientMessage =
-  | { type: 'join'; name: string }
+  | { type: 'join'; name: string; userId: string }
   | { type: 'vote'; value: PointValue | null }
   | { type: 'reveal' }
   | { type: 'reset' };
