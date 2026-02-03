@@ -26,7 +26,7 @@ wss.on('connection', (ws: WebSocket, req) => {
       const message: ClientMessage = JSON.parse(data.toString());
 
       if (message.type === 'join' && !hasJoined) {
-        roomManager.joinRoom(roomId, ws, message.userId, message.name);
+        roomManager.joinRoom(roomId, ws, message.userId, message.name, message.playerType);
         hasJoined = true;
       } else if (hasJoined) {
         roomManager.handleMessage(ws, message);

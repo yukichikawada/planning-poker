@@ -1,16 +1,19 @@
 'use client';
 
-import { POINT_VALUES, type PointValue } from '@/lib/types';
+import { POINT_VALUES, QA_POINT_VALUES, type AllPointValues, type PlayerType } from '@/lib/types';
 import { PokerCard } from './PokerCard';
 
 interface CardDeckProps {
-  selectedValue: PointValue | null;
-  onSelect: (value: PointValue | null) => void;
+  selectedValue: AllPointValues | null;
+  onSelect: (value: AllPointValues | null) => void;
   disabled: boolean;
+  playerType: PlayerType;
 }
 
-export function CardDeck({ selectedValue, onSelect, disabled }: CardDeckProps) {
-  const handleCardClick = (value: PointValue) => {
+export function CardDeck({ selectedValue, onSelect, disabled, playerType }: CardDeckProps) {
+  const pointValues = playerType === 'qa' ? QA_POINT_VALUES : POINT_VALUES;
+
+  const handleCardClick = (value: AllPointValues) => {
     if (selectedValue === value) {
       onSelect(null);
     } else {
@@ -24,7 +27,7 @@ export function CardDeck({ selectedValue, onSelect, disabled }: CardDeckProps) {
         {disabled ? 'Voting closed' : 'Select your estimate'}
       </p>
       <div className="flex flex-wrap justify-center gap-2 sm:gap-3">
-        {POINT_VALUES.map((value) => (
+        {pointValues.map((value) => (
           <PokerCard
             key={value}
             value={value}

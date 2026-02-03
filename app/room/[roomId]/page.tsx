@@ -3,7 +3,7 @@
 import { useEffect, useState, useCallback } from 'react';
 import { useParams } from 'next/navigation';
 import { WebSocketClient } from '@/lib/websocket-client';
-import type { Room, PointValue, ServerMessage } from '@/lib/types';
+import type { Room, AllPointValues, ServerMessage, PlayerType } from '@/lib/types';
 import { NameDialog } from '@/components/NameDialog';
 import { CardDeck } from '@/components/CardDeck';
 import { ParticipantList } from '@/components/ParticipantList';
@@ -11,6 +11,7 @@ import { VoteChart } from '@/components/VoteChart';
 import { RoomControls } from '@/components/RoomControls';
 
 const STORAGE_KEY = 'planning-poker-name';
+const PLAYER_TYPE_KEY = 'planning-poker-player-type';
 
 export default function RoomPage() {
   const params = useParams();
@@ -18,7 +19,7 @@ export default function RoomPage() {
   const [client, setClient] = useState<WebSocketClient | null>(null);
   const [room, setRoom] = useState<Room | null>(null);
   const [userId, setUserId] = useState<string | null>(null);
-  const [selectedVote, setSelectedVote] = useState<PointValue | null>(null);
+  const [selectedVote, setSelectedVote] = useState<AllPointValues | null>(null);
   const [votedUsers, setVotedUsers] = useState<Set<string>>(new Set());
   const [showNameDialog, setShowNameDialog] = useState(false);
   const [isConnecting, setIsConnecting] = useState(true);
@@ -97,13 +98,14 @@ export default function RoomPage() {
 
   useEffect(() => {
     const savedName = localStorage.getItem(STORAGE_KEY);
+    const savedPlayerType = (localStorage.getItem(PLAYER_TYPE_KEY) as PlayerType) || 'android';
     const wsClient = new WebSocketClient(roomId);
     setClient(wsClient);
 
     wsClient.connect(handleMessage);
 
     if (savedName) {
-      wsClient.join(savedName);
+      wsClient.join(savedName, savedPlayerType);
     } else {
       setShowNameDialog(true);
       setIsConnecting(false);
@@ -114,14 +116,15 @@ export default function RoomPage() {
     };
   }, [roomId, handleMessage]);
 
-  const handleNameSubmit = (name: string) => {
+  const handleNameSubmit = (name: string, playerType: PlayerType) => {
     localStorage.setItem(STORAGE_KEY, name);
+    localStorage.setItem(PLAYER_TYPE_KEY, playerType);
     setShowNameDialog(false);
     setIsConnecting(true);
-    client?.join(name);
+    client?.join(name, playerType);
   };
 
-  const handleVoteSelect = (value: PointValue | null) => {
+  const handleVoteSelect = (value: AllPointValues | null) => {
     setSelectedVote(value);
     client?.vote(value);
   };
@@ -175,7 +178,7 @@ export default function RoomPage() {
 
         <ParticipantList room={room} currentUserId={userId!} votedUsers={votedUsers} />
 
-        {room.isRevealed && <VoteChart votes={room.votes} />}
+        {room.isRevealed && <VoteChart votes={room.votes} users={room.users} />}
 
         <RoomControls
           isHost={isHost}
@@ -188,6 +191,7 @@ export default function RoomPage() {
           selectedValue={selectedVote}
           onSelect={handleVoteSelect}
           disabled={room.isRevealed}
+          playerType={room.users.find(u => u.id === userId)?.playerType || 'android'}
         />
       </div>
     </main>

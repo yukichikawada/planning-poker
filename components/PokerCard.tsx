@@ -1,9 +1,9 @@
 'use client';
 
-import type { PointValue } from '@/lib/types';
+import type { AllPointValues } from '@/lib/types';
 
 interface PokerCardProps {
-  value: PointValue;
+  value: AllPointValues;
   selected: boolean;
   disabled: boolean;
   onClick: () => void;

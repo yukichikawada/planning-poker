@@ -1,5 +1,5 @@
 import { WebSocket } from 'ws';
-import type { Room, User, PointValue, ServerMessage, ClientMessage } from '../lib/types';
+import type { Room, User, AllPointValues, ServerMessage, ClientMessage, PlayerType } from '../lib/types';
 
 interface Connection {
   roomId: string;
@@ -26,7 +26,7 @@ export class RoomManager {
     return this.rooms.get(roomId);
   }
 
-  joinRoom(roomId: string, ws: WebSocket, userId: string, name: string): void {
+  joinRoom(roomId: string, ws: WebSocket, userId: string, name: string, playerType: PlayerType): void {
     // Prevent duplicate joins from the same connection
     if (this.connections.has(ws)) {
       return;
@@ -48,8 +48,9 @@ export class RoomManager {
       });
       // Update connection mapping
       this.connections.set(ws, { roomId, userId });
-      // Update name if changed
+      // Update name and playerType if changed
       existingUser.name = name;
+      existingUser.playerType = playerType;
       // Send current room state
       this.send(ws, {
         type: 'room-state',
@@ -60,7 +61,7 @@ export class RoomManager {
     }
 
     const isHost = room.users.length === 0;
-    const user: User = { id: userId, name, isHost };
+    const user: User = { id: userId, name, isHost, playerType };
 
     if (isHost) {
       room.hostId = userId;
@@ -81,7 +82,7 @@ export class RoomManager {
     this.broadcastToRoom(roomId, { type: 'user-joined', user }, ws);
   }
 
-  handleVote(ws: WebSocket, value: PointValue | null): void {
+  handleVote(ws: WebSocket, value: AllPointValues | null): void {
     const conn = this.connections.get(ws);
     if (!conn) return;
 
@@ -103,12 +104,6 @@ export class RoomManager {
 
     const room = this.rooms.get(conn.roomId);
     if (!room) return;
-
-    // Only host can reveal
-    if (room.hostId !== conn.userId) {
-      this.send(ws, { type: 'error', message: 'Only the host can reveal votes' });
-      return;
-    }
 
     room.isRevealed = true;
     this.broadcastToRoom(conn.roomId, {
@@ -194,9 +189,9 @@ export class RoomManager {
       return room;
     }
     // Hide vote values, only show who has voted
-    const sanitizedVotes: Record<string, PointValue | null> = {};
+    const sanitizedVotes: Record<string, AllPointValues | null> = {};
     for (const [userId, vote] of Object.entries(room.votes)) {
-      sanitizedVotes[userId] = vote !== null ? (0 as PointValue) : null;
+      sanitizedVotes[userId] = vote !== null ? (0 as AllPointValues) : null;
     }
     return { ...room, votes: sanitizedVotes };
   }

@@ -1,9 +1,10 @@
-import type { ClientMessage, ServerMessage, PointValue } from './types';
+import type { ClientMessage, ServerMessage, AllPointValues, PlayerType } from './types';
 import { WS_URL } from './constants';
 
 type MessageHandler = (message: ServerMessage) => void;
 
 const USER_ID_KEY = 'planning-poker-user-id';
+const PLAYER_TYPE_KEY = 'planning-poker-player-type';
 
 function getOrCreateUserId(): string {
   if (typeof window === 'undefined') return '';
@@ -15,6 +16,11 @@ function getOrCreateUserId(): string {
   return userId;
 }
 
+function getStoredPlayerType(): PlayerType {
+  if (typeof window === 'undefined') return 'android';
+  return (localStorage.getItem(PLAYER_TYPE_KEY) as PlayerType) || 'android';
+}
+
 export class WebSocketClient {
   private ws: WebSocket | null = null;
   private messageHandler: MessageHandler | null = null;
@@ -22,6 +28,7 @@ export class WebSocketClient {
   private maxReconnectAttempts = 5;
   private roomId: string;
   private userName: string | null = null;
+  private playerType: PlayerType = 'android';
   private userId: string;
   private pendingMessages: ClientMessage[] = [];
   private isConnected = false;
@@ -30,6 +37,7 @@ export class WebSocketClient {
   constructor(roomId: string) {
     this.roomId = roomId;
     this.userId = getOrCreateUserId();
+    this.playerType = getStoredPlayerType();
   }
 
   connect(onMessage: MessageHandler): void {
@@ -49,7 +57,7 @@ export class WebSocketClient {
       // If we have a username and haven't joined yet, send join
       if (this.userName && !this.hasJoined) {
         this.hasJoined = true;
-        this.send({ type: 'join', name: this.userName, userId: this.userId });
+        this.send({ type: 'join', name: this.userName, userId: this.userId, playerType: this.playerType });
       }
     };
 
@@ -75,17 +83,19 @@ export class WebSocketClient {
     };
   }
 
-  join(name: string): void {
+  join(name: string, playerType: PlayerType): void {
     if (this.hasJoined) return;
     this.userName = name;
+    this.playerType = playerType;
+    localStorage.setItem(PLAYER_TYPE_KEY, playerType);
     if (this.isConnected) {
       this.hasJoined = true;
-      this.send({ type: 'join', name, userId: this.userId });
+      this.send({ type: 'join', name, userId: this.userId, playerType });
     }
     // If not connected yet, onopen will send the join
   }
 
-  vote(value: PointValue | null): void {
+  vote(value: AllPointValues | null): void {
     this.send({ type: 'vote', value });
   }
 
