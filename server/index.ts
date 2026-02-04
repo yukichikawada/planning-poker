@@ -2,7 +2,7 @@ import { WebSocketServer, WebSocket } from 'ws';
 import { RoomManager } from './room-manager';
 import type { ClientMessage } from '../lib/types';
 
-const PORT = 3001;
+const PORT = parseInt(process.env.PORT || '3001', 10);
 const roomManager = new RoomManager();
 
 const wss = new WebSocketServer({ port: PORT });
