@@ -15,10 +15,18 @@ const PLAYER_TYPE_LABELS: Record<PlayerType, string> = {
   qa: 'QA',
 };
 
-const PLAYER_TYPE_ORDER: PlayerType[] = ['android', 'ios', 'qa'];
+const DEFAULT_TYPE_ORDER: PlayerType[] = ['android', 'ios', 'qa'];
 
 export function ParticipantList({ room, currentUserId, votedUsers }: ParticipantListProps) {
-  const usersByType = PLAYER_TYPE_ORDER.map((type) => ({
+  const currentUser = room.users.find((u) => u.id === currentUserId);
+  const currentUserType = currentUser?.playerType;
+
+  // Put current user's type first, then the rest in default order
+  const typeOrder = currentUserType
+    ? [currentUserType, ...DEFAULT_TYPE_ORDER.filter((t) => t !== currentUserType)]
+    : DEFAULT_TYPE_ORDER;
+
+  const usersByType = typeOrder.map((type) => ({
     type,
     label: PLAYER_TYPE_LABELS[type],
     users: room.users.filter((user) => user.playerType === type),
