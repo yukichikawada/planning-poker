@@ -181,6 +181,13 @@ export default function RoomPage() {
           </button>
         </header>
 
+        <CardDeck
+          selectedValue={selectedVote}
+          onSelect={handleVoteSelect}
+          disabled={room.isRevealed}
+          playerType={room.users.find(u => u.id === userId)?.playerType || 'android'}
+        />
+
         <ParticipantList room={room} currentUserId={userId!} votedUsers={votedUsers} />
 
         {room.isRevealed && <VoteChart votes={room.votes} users={room.users} />}
@@ -189,13 +196,6 @@ export default function RoomPage() {
           isRevealed={room.isRevealed}
           onReveal={handleReveal}
           onReset={handleReset}
-        />
-
-        <CardDeck
-          selectedValue={selectedVote}
-          onSelect={handleVoteSelect}
-          disabled={room.isRevealed}
-          playerType={room.users.find(u => u.id === userId)?.playerType || 'android'}
         />
       </div>
     </main>

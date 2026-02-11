@@ -15,7 +15,7 @@ export function PokerCard({ value, selected, disabled, onClick }: PokerCardProps
       onClick={onClick}
       disabled={disabled}
       className={`
-        w-16 h-24 sm:w-20 sm:h-28 rounded-xl font-bold text-xl sm:text-2xl
+        w-16 h-12 sm:w-20 sm:h-14 rounded-lg font-bold text-lg sm:text-xl
         border-2 transition-all duration-200
         ${selected
           ? 'bg-blue-600 text-white border-blue-700 scale-110 shadow-lg'
