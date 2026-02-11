@@ -168,16 +168,26 @@ export default function RoomPage() {
               Room: <span className="font-mono font-semibold">{roomId}</span>
             </p>
           </div>
-          <button
-            onClick={handleCopyLink}
-            className={`px-4 py-2 text-sm rounded-lg transition-colors ${
-              copied
-                ? 'bg-green-600 text-white border border-green-600'
-                : 'bg-white border border-gray-300 hover:bg-gray-50'
-            }`}
-          >
-            {copied ? 'Copied!' : 'Copy Link'}
-          </button>
+          <div className="flex gap-2">
+            {!room.isRevealed && (
+              <button
+                onClick={handleReveal}
+                className="px-4 py-2 text-sm bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors"
+              >
+                Reveal Votes
+              </button>
+            )}
+            <button
+              onClick={handleCopyLink}
+              className={`px-4 py-2 text-sm rounded-lg transition-colors ${
+                copied
+                  ? 'bg-green-600 text-white border border-green-600'
+                  : 'bg-white border border-gray-300 hover:bg-gray-50'
+              }`}
+            >
+              {copied ? 'Copied!' : 'Copy Link'}
+            </button>
+          </div>
         </header>
 
         <CardDeck
@@ -188,17 +198,6 @@ export default function RoomPage() {
         />
 
         <ParticipantList room={room} currentUserId={userId!} votedUsers={votedUsers} />
-
-        {!room.isRevealed && (
-          <div className="flex justify-center">
-            <button
-              onClick={handleReveal}
-              className="px-8 py-3 bg-green-600 text-white font-semibold rounded-lg hover:bg-green-700 transition-colors shadow-md"
-            >
-              Reveal Votes
-            </button>
-          </div>
-        )}
 
         {room.isRevealed && (
           <VoteResultsModal
