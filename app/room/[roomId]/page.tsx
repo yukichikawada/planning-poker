@@ -23,6 +23,7 @@ export default function RoomPage() {
   const [votedUsers, setVotedUsers] = useState<Set<string>>(new Set());
   const [showNameDialog, setShowNameDialog] = useState(false);
   const [isConnecting, setIsConnecting] = useState(true);
+  const [copied, setCopied] = useState(false);
 
   const handleMessage = useCallback((message: ServerMessage) => {
     switch (message.type) {
@@ -139,6 +140,8 @@ export default function RoomPage() {
 
   const handleCopyLink = () => {
     navigator.clipboard.writeText(window.location.href);
+    setCopied(true);
+    setTimeout(() => setCopied(false), 2000);
   };
 
   const isHost = room?.hostId === userId;
@@ -170,9 +173,13 @@ export default function RoomPage() {
           </div>
           <button
             onClick={handleCopyLink}
-            className="px-4 py-2 text-sm bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
+            className={`px-4 py-2 text-sm rounded-lg transition-colors ${
+              copied
+                ? 'bg-green-600 text-white border border-green-600'
+                : 'bg-white border border-gray-300 hover:bg-gray-50'
+            }`}
           >
-            Copy Link
+            {copied ? 'Copied!' : 'Copy Link'}
           </button>
         </header>
 
