@@ -119,12 +119,6 @@ export class RoomManager {
     const room = this.rooms.get(conn.roomId);
     if (!room) return;
 
-    // Only host can reset
-    if (room.hostId !== conn.userId) {
-      this.send(ws, { type: 'error', message: 'Only the host can reset' });
-      return;
-    }
-
     room.isRevealed = false;
     for (const userId of Object.keys(room.votes)) {
       room.votes[userId] = null;
