@@ -7,8 +7,7 @@ import type { Room, AllPointValues, ServerMessage, PlayerType } from '@/lib/type
 import { NameDialog } from '@/components/NameDialog';
 import { CardDeck } from '@/components/CardDeck';
 import { ParticipantList } from '@/components/ParticipantList';
-import { VoteChart } from '@/components/VoteChart';
-import { RoomControls } from '@/components/RoomControls';
+import { VoteResultsModal } from '@/components/VoteResultsModal';
 
 const STORAGE_KEY = 'planning-poker-name';
 const PLAYER_TYPE_KEY = 'planning-poker-player-type';
@@ -190,13 +189,24 @@ export default function RoomPage() {
 
         <ParticipantList room={room} currentUserId={userId!} votedUsers={votedUsers} />
 
-        {room.isRevealed && <VoteChart votes={room.votes} users={room.users} />}
+        {!room.isRevealed && (
+          <div className="flex justify-center">
+            <button
+              onClick={handleReveal}
+              className="px-8 py-3 bg-green-600 text-white font-semibold rounded-lg hover:bg-green-700 transition-colors shadow-md"
+            >
+              Reveal Votes
+            </button>
+          </div>
+        )}
 
-        <RoomControls
-          isRevealed={room.isRevealed}
-          onReveal={handleReveal}
-          onReset={handleReset}
-        />
+        {room.isRevealed && (
+          <VoteResultsModal
+            votes={room.votes}
+            users={room.users}
+            onNewRound={handleReset}
+          />
+        )}
       </div>
     </main>
   );
