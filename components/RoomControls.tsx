@@ -1,13 +1,12 @@
 'use client';
 
 interface RoomControlsProps {
-  isHost: boolean;
   isRevealed: boolean;
   onReveal: () => void;
   onReset: () => void;
 }
 
-export function RoomControls({ isHost, isRevealed, onReveal, onReset }: RoomControlsProps) {
+export function RoomControls({ isRevealed, onReveal, onReset }: RoomControlsProps) {
   return (
     <div className="flex justify-center gap-4">
       {!isRevealed ? (

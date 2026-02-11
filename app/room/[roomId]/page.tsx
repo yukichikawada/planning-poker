@@ -144,8 +144,6 @@ export default function RoomPage() {
     setTimeout(() => setCopied(false), 2000);
   };
 
-  const isHost = room?.hostId === userId;
-
   if (showNameDialog) {
     return <NameDialog onSubmit={handleNameSubmit} />;
   }
@@ -188,7 +186,6 @@ export default function RoomPage() {
         {room.isRevealed && <VoteChart votes={room.votes} users={room.users} />}
 
         <RoomControls
-          isHost={isHost}
           isRevealed={room.isRevealed}
           onReveal={handleReveal}
           onReset={handleReset}
