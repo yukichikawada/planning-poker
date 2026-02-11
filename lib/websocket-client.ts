@@ -1,7 +1,11 @@
 import type { ClientMessage, ServerMessage, AllPointValues, PlayerType } from './types';
-import { WS_URL } from './constants';
 
 type MessageHandler = (message: ServerMessage) => void;
+
+function getWsUrl(): string {
+  const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+  return `${protocol}//${window.location.host}/ws`;
+}
 
 const USER_ID_KEY = 'planning-poker-user-id';
 const PLAYER_TYPE_KEY = 'planning-poker-player-type';
@@ -42,7 +46,7 @@ export class WebSocketClient {
 
   connect(onMessage: MessageHandler): void {
     this.messageHandler = onMessage;
-    this.ws = new WebSocket(`${WS_URL}?roomId=${this.roomId}`);
+    this.ws = new WebSocket(`${getWsUrl()}?roomId=${this.roomId}`);
 
     this.ws.onopen = () => {
       this.reconnectAttempts = 0;
